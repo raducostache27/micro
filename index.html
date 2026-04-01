@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GI Microbiology Quiz – Dr. Colle</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f0;min-height:100vh;display:flex;justify-content:center;padding:2rem 1rem}
+#app{width:100%;max-width:680px}
+.card{background:#fff;border-radius:14px;padding:2rem;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem}
+h2{font-size:18px;font-weight:600;color:#1a1a1a}
+.badge{font-size:12px;padding:3px 10px;border-radius:20px;background:#f0ede8;color:#666;border:1px solid #e0ddd8}
+.prog-wrap{height:5px;background:#f0ede8;border-radius:5px;margin-bottom:1.6rem}
+.prog{height:5px;background:#1D9E75;border-radius:5px;transition:width 0.3s}
+.cat{font-size:11px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:#999;margin-bottom:0.5rem}
+.qtxt{font-size:16px;font-weight:600;color:#1a1a1a;line-height:1.6;margin-bottom:1.1rem}
+.opts{display:flex;flex-direction:column;gap:8px;margin-bottom:1rem}
+.opt{text-align:left;padding:12px 16px;border:1.5px solid #e0ddd8;border-radius:10px;background:#fff;color:#1a1a1a;font-size:14px;cursor:pointer;line-height:1.5;transition:background 0.12s,border-color 0.12s;font-family:inherit}
+.opt:hover:not(.locked){background:#f5f4f0;border-color:#bbb}
+.opt.correct{background:#eaf3de;border-color:#3B6D11;color:#27500A;font-weight:500}
+.opt.wrong{background:#fcebeb;border-color:#A32D2D;color:#791F1F}
+.opt.reveal{background:#eaf3de;border-color:#3B6D11;color:#27500A;opacity:0.7}
+.exp{font-size:13px;color:#555;background:#f5f4f0;border-radius:10px;padding:12px 14px;line-height:1.65;border:1px solid #e0ddd8;margin-bottom:1rem;display:none}
+.exp.show{display:block}
+.ftr{display:flex;align-items:center;justify-content:space-between}
+.score{font-size:13px;color:#888}
+.score span{font-weight:600;color:#1a1a1a}
+.nxt{padding:9px 22px;border-radius:10px;background:#1a1a1a;border:none;color:#fff;font-size:14px;cursor:pointer;display:none;font-family:inherit}
+.nxt:hover{background:#333}
+.result{display:none;text-align:center;padding:1.5rem 0}
+.result h3{font-size:20px;font-weight:600;color:#1a1a1a;margin-bottom:0.4rem}
+.big-score{font-size:56px;font-weight:700;color:#1D9E75;margin:0.8rem 0}
+.rlabel{font-size:15px;color:#666;margin-bottom:1.5rem}
+.restart{padding:10px 26px;border-radius:10px;background:#1a1a1a;border:none;color:#fff;font-size:14px;cursor:pointer;font-family:inherit}
+.restart:hover{background:#333}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="card">
+    <div class="hdr"><h2>GI Microbiology Quiz</h2><div class="badge" id="ctr">Q 1 of 20</div></div>
+    <div class="prog-wrap"><div class="prog" id="prog" style="width:5%"></div></div>
+    <div id="qbody">
+      <div class="cat" id="cat"></div>
+      <div class="qtxt" id="qtxt"></div>
+      <div class="opts" id="opts"></div>
+      <div class="exp" id="exp"></div>
+      <div class="ftr">
+        <div class="score">Score: <span id="sv">0</span> / <span id="st">0</span></div>
+        <button class="nxt" id="nxt" onclick="next()">Next question</button>
+      </div>
+    </div>
+    <div class="result" id="result">
+      <h3>Quiz complete</h3>
+      <div class="big-score" id="fs"></div>
+      <div class="rlabel" id="fl"></div>
+      <button class="restart" onclick="start()">Shuffle new quiz</button>
+    </div>
+  </div>
+</div>
+<script>
+const POOL=[
+{cat:"Norovirus",q:"What is the typical incubation period for Norovirus?",opts:["6–12 hours","12–48 hours","3–5 days","7–10 days"],ans:1,exp:"Norovirus incubation is 24–48 hours after exposure, though it may occur in as little as 12 hours depending on viral dose."},
+{cat:"Norovirus",q:"Norovirus belongs to which viral family?",opts:["Reoviridae","Adenoviridae","Caliciviridae","Picornaviridae"],ans:2,exp:"Norovirus is a member of Caliciviridae, formerly called Norwalk-like virus. It has a positive ssRNA genome of 7.6 kb in a non-enveloped icosahedral capsid."},
+{cat:"Norovirus",q:"Norovirus is resistant to chlorine up to what concentration?",opts:["1 ppm","5 ppm","10 ppm","20 ppm"],ans:2,exp:"Norovirus survives chlorine treatments up to 10 ppm — higher than municipal water treatment uses — making waterborne outbreaks possible."},
+{cat:"Norovirus",q:"Which blood group has greater risk of severe Norovirus infection?",opts:["A","B","AB","O"],ans:3,exp:"Blood group O individuals are more at risk of severe Norovirus infection. Resistance to disease does not correlate with serum antibody levels."},
+{cat:"Norovirus",q:"Norovirus causes lesions primarily in which GI site?",opts:["Large intestine","Proximal small intestine","Stomach","Rectum"],ans:1,exp:"Norovirus causes mucocutaneous lesions in the proximal small intestine with cellular vacuolization and monocyte infiltration, sparing the large intestine. Fecal lymphocytes are not seen."},
+{cat:"Norovirus",q:"What proportion of acute non-bacterial gastroenteritis in the USA does Norovirus cause?",opts:["~10%","~25%","~50%","~75%"],ans:2,exp:"Norovirus causes nearly 50% of all cases of acute non-bacterial gastroenteritis in the USA — approximately 23 million cases per year."},
+{cat:"Rotavirus",q:"What is the preferred diagnostic method for Rotavirus?",opts:["Nucleic acid hybridization","PCR","Enzyme immunoassay (EIA)","Electron microscopy"],ans:2,exp:"EIA kits are the preferred method — simple to use, inexpensive, and highly sensitive."},
+{cat:"Rotavirus",q:"How many doses of oral Rotavirus vaccine are recommended?",opts:["1 dose at 2 months","2 doses at 2 and 4 months","3 doses at 2, 4, and 6 months","4 doses at 2, 4, 6, and 12 months"],ans:2,exp:"Current guidelines: 3 doses of oral live-attenuated vaccine (RotaTeq or Rotarix) at 2, 4, and 6 months of age."},
+{cat:"Rotavirus",q:"Rotavirus genome is best described as:",opts:["Single-stranded positive RNA, enveloped","Double-stranded segmented RNA, non-enveloped","Single-stranded negative RNA, enveloped","Double-stranded DNA, non-enveloped"],ans:1,exp:"Rotavirus has 10–12 segments of dsRNA (~27 kb total) in a unique non-enveloped icosahedral capsid with inner and outer concentric nucleocapsids."},
+{cat:"Rotavirus",q:"Rotavirus spreads primarily via:",opts:["Respiratory droplets only","Fecal-oral route (and possibly respiratory secretions)","Sexual contact","Vector-borne"],ans:1,exp:"Rotavirus transmits by fecal-oral route but may also spread via respiratory secretions. Fomites (e.g., contaminated toys in day care) are also a source."},
+{cat:"Rotavirus",q:"Peak virus shedding in Rotavirus infection occurs:",opts:["Before symptoms appear","2–5 days after symptom onset","7–10 days after onset","During convalescence"],ans:1,exp:"Peak virus shedding occurs between 2 and 5 days after symptom onset. Incubation period is 2–4 days. Diarrhea lasts 4–8 days."},
+{cat:"Rotavirus",q:"Rotavirus pathogenesis involves:",opts:["Viremia spreading to multiple organs","Necrotizing enterocolitis with shortened denuded villi","Toxin-mediated fluid secretion raising cAMP","Actin-based intracellular spread"],ans:1,exp:"Rotavirus adsorbs to and replicates in intestinal columnar epithelial cells causing necrotizing enterocolitis with shortened, denuded villi and decreased absorption. No viremia occurs."},
+{cat:"Campylobacter",q:"C. jejuni is the most common cause of:",opts:["Viral gastroenteritis in the USA","Bacterial gastroenteritis in the USA","Dysentery in developing countries","Nosocomial diarrhea"],ans:1,exp:"C. jejuni is the most common cause of bacterial gastroenteritis in the USA with over 2 million cases annually. Most cases are sporadic and more common in warmer months."},
+{cat:"Campylobacter",q:"Which serious sequela is associated with Campylobacter infection?",opts:["Hemolytic uremic syndrome","Guillain-Barré syndrome","Toxic megacolon","Hepatic abscess"],ans:1,exp:"~40% of Guillain-Barré syndrome (acute demyelinating neuropathy) cases are preceded by Campylobacter infection. Molecular mimicry between LPS core antigen and peripheral nerve myelin is suspected (O:19 serotype)."},
+{cat:"Campylobacter",q:"Campylobacter grows best at what temperature?",opts:["35–37°C","42–43°C","25–30°C","45–50°C"],ans:1,exp:"Campylobacter grows best at 42–43°C — normal avian body temperature. A vignette mentioning a 'special incubator' is a clue pointing to Campylobacter."},
+{cat:"Campylobacter",q:"The most common source of Campylobacter infection is:",opts:["Contaminated water","Undercooked poultry (~50% of infections)","Raw milk","Undercooked pork"],ans:1,exp:"Contaminated poultry accounts for ~50% of Campylobacter infections. Wild birds shed large numbers of bacteria that infect domesticated animals used as food sources."},
+{cat:"Campylobacter",q:"C. jejuni is described morphologically as:",opts:["Gram-positive cocci in clusters","Gram-negative curved rod with 'seagull' or S-shape","Gram-negative comma-shaped rod","Gram-positive spore-forming rod"],ans:1,exp:"Campylobacter are gram-negative spiral curved rods with a 'seagull' or S appearance, oxidase positive, with polar flagella and rapid motility. They are microaerophilic and very fragile."},
+{cat:"H. pylori",q:"The most prominent biochemical feature of H. pylori is:",opts:["Strong oxidase activity","Very powerful urease","Beta-hemolysis","Catalase negativity"],ans:1,exp:"H. pylori's main virulence factor is powerful urease (mnemonic PUNCH: Proteus, Ureaplasma, Nocardia, Cryptococcus, Helicobacter). It hydrolyzes urea to CO2 and ammonia, neutralizing the stomach microenvironment."},
+{cat:"H. pylori",q:"Which H. pylori test cannot be used in children due to a radioactive isotope?",opts:["ELISA serology","Fecal antigen test","C-14 urea breath test","Biopsy urease test"],ans:2,exp:"The C-14 urea breath test is not used in children because of C-14's radioactivity. C-13 (non-radioactive) is the alternative for children."},
+{cat:"H. pylori",q:"Standard H. pylori treatment is:",opts:["Single antibiotic for 1 week","Two antibiotics + proton pump inhibitor for ≥2 weeks","Vancomycin alone","Supportive care only"],ans:1,exp:"Combination therapy: 2 antibiotics (clarithromycin + amoxicillin) plus a proton pump inhibitor (omeprazole) for at least 2 weeks. Prophylactic treatment is NOT recommended unless peptic ulcer disease or gastric lymphoma is present."},
+{cat:"H. pylori",q:"H. pylori is classified by WHO as a:",opts:["Class II carcinogen","Class I carcinogen","Group 2A (probable) carcinogen","Non-carcinogen"],ans:1,exp:"WHO classifies H. pylori as a Class I carcinogen. It is associated with 85% of gastric ulcers, 95% of peptic ulcers, plus gastric adenocarcinoma and B-cell lymphoma."},
+{cat:"H. pylori",q:"What percentage of the US population is infected with H. pylori?",opts:["5–10%","30–50%","70–80%","~100%"],ans:1,exp:"30–50% of the US population is infected. In developing countries infection approaches 100%. Humans are the only known reservoir; transmission is fecal-oral or oral-oral."},
+{cat:"H. pylori",q:"The definitive/most sensitive test for H. pylori is:",opts:["Serology (ELISA)","Urea breath test","Endoscopy with biopsy + culture (silver stained)","Fecal antigen test"],ans:2,exp:"Biopsy and culture via endoscopy are the definitive and most sensitive tests. Gastric biopsy is silver stained. The biopsy urease test gives fast results (70% accuracy at 2 hours, 90% at 24 hours)."},
+{cat:"V. cholerae",q:"Cholera toxin acts by:",opts:["Inhibiting adenylate cyclase","Irreversibly activating adenylate cyclase via ADP-ribosylation","Forming pores in the cell membrane","Inhibiting 60S ribosome protein synthesis"],ans:1,exp:"Cholera toxin A1 peptide ADP-ribosylates a GTP-binding protein, locking adenylate cyclase 'ON,' massively raising cAMP, causing hypersecretion of Cl⁻, HCO₃⁻, and water into the small intestine lumen."},
+{cat:"V. cholerae",q:"Classic cholera stool is described as:",opts:["Bloody and mucoid","Rice-water stool","Green and foul-smelling","Fatty and pale"],ans:1,exp:"Cholera produces profuse 'rice-water stools' containing mucus, epithelial cells, and large numbers of vibrios (10^6 bacteria/mL). Up to 20 liters per day can be lost (normal = 100 mL/day)."},
+{cat:"V. cholerae",q:"What infectious dose is required for V. cholerae?",opts:[">10 organisms",">1,000 organisms",">100,000 organisms",">100 million organisms"],ans:3,exp:"Cholera requires >10^8 bacteria because it is rapidly killed by gastric acid (pH <6). Antacid use or achlorhydria significantly lowers the required dose."},
+{cat:"V. cholerae",q:"Cholera is NOT an invasive infection because:",opts:["It lacks flagella for tissue penetration","Organisms remain localized in the intestinal tract and never reach the bloodstream","The immune system clears bacteremia immediately","It only replicates in the colon"],ans:1,exp:"Cholera is not invasive — the organisms remain localized within the intestinal tract and never reach the bloodstream. Disease is entirely toxin-mediated."},
+{cat:"V. cholerae",q:"Cholera vaccines provide protection for how long?",opts:["1 month","3–9 months","2–5 years","Lifelong"],ans:1,exp:"Cholera vaccines only provide protection for 3–9 months and are completely ineffective against non-O1 strains. They also fail to prevent epidemics, death, or carriers."},
+{cat:"E. coli",q:"Which E. coli type causes hemolytic uremic syndrome (HUS)?",opts:["ETEC","EPEC","EHEC (O157:H7)","EIEC"],ans:2,exp:"EHEC O157:H7 (STEC) produces Shiga-like toxins 1 and 2 that inhibit protein synthesis by nicking the 60S ribosome, causing HUS — the leading cause of acute renal failure in children under 5."},
+{cat:"E. coli",q:"ETEC (traveler's diarrhea) causes disease via:",opts:["Colonic invasion","LT and ST toxins causing fluid hypersecretion","Shiga-like toxins nicking the 60S ribosome","Destroying microvilli via type III secretion"],ans:1,exp:"ETEC uses heat-labile (LT) and heat-stable (ST) toxins to hypersecrete fluids — similar mechanism to cholera toxin. No histological changes to GI mucosa occur."},
+{cat:"E. coli",q:"EHEC on sorbitol-MacConkey (SMAC) agar appears as:",opts:["Pink fermenting colonies","Colorless non-fermenting colonies","Black H2S colonies","Yellow/orange colonies"],ans:1,exp:"EHEC is a sorbitol non-fermenter, producing colorless colonies on SMAC plates — a key vignette clue for identifying O157:H7."},
+{cat:"E. coli",q:"Why are antibiotics contraindicated in EHEC infection?",opts:["They are ineffective against gram-negatives","They increase risk of HUS","They prolong gallbladder carrier state","They cause toxic megacolon"],ans:1,exp:"Antibiotic treatment in EHEC can increase the risk of HUS. Anti-motility agents are also contraindicated in EHEC and EIEC infections."},
+{cat:"E. coli",q:"EPEC causes diarrhea primarily by:",opts:["Producing Shiga-like toxins","Adhering to enterocytes and destroying adjacent microvilli","Invading the colonic epithelium","Heat-stable toxin raising cAMP"],ans:1,exp:"EPEC adheres to the enterocyte plasma membrane and destroys adjacent microvilli, causing loss of absorptive properties and watery diarrhea. Important cause of pediatric diarrhea in developing countries."},
+{cat:"Shigella",q:"What is the infectious dose of S. dysenteriae?",opts:["~10 organisms","~200 organisms","~10,000 organisms",">1 million organisms"],ans:0,exp:"Only 10 S. dysenteriae organisms can establish disease, making it extremely contagious. S. sonnei requires ~200 organisms. In the US, S. sonnei accounts for 73% of cases."},
+{cat:"Shigella",q:"Shigella spreads within the host by:",opts:["Transient bacteremia to distant organs","Polymerizing actin jets to move cell-to-cell without extracellular exposure","Releasing exotoxins that diffuse through tissue","Phagocytic uptake only"],ans:1,exp:"Shigellae invade M cells, gain cytoplasmic entry, replicate, then polymerize actin 'jet trails' to spread laterally cell-to-cell without extracellular exposure — evading the immune response."},
+{cat:"Shigella",q:"Shiga toxin causes disease by:",opts:["Increasing intracellular cAMP","Nicking the 60S ribosome to inhibit protein synthesis","ADP-ribosylating adenylate cyclase","Forming membrane pores"],ans:1,exp:"Shiga neurotoxin nicks the 60S ribosome inhibiting protein synthesis, causing endothelial damage in colonic lamina propria capillaries, leading to ischemia and hemorrhagic colitis."},
+{cat:"Shigella",q:"Shigella clinical presentation begins with:",opts:["Profuse rice-water stool from onset","Fever, watery diarrhea — then bloody stool as bacteria colonize colon","Sudden vomiting within 2–6 hours of eating","Constipation with rose spots"],ans:1,exp:"Shigella begins with fever (>101°F), nausea, vomiting, and watery diarrhea. As bacteria colonize the colon and penetrate, abdominal cramps, fever, blood, and mucus in stool develop."},
+{cat:"Salmonella",q:"Salmonella gastroenteritis vs. typhoid fever — gastroenteritis:",opts:["Is not a zoonotic infection","Requires a human source only","Is zoonotic and does NOT confer immunity","Always establishes a gallbladder carrier state"],ans:2,exp:"Salmonella gastroenteritis is zoonotic (poultry ~50% of cases) and does not confer immunity. Typhoid fever is exclusively from humans and confers lifelong immunity."},
+{cat:"Salmonella",q:"Salmonella on MacConkey agar appears as:",opts:["Pink lactose-fermenting colonies","Colorless, non-lactose fermenting; H2S positive","Yellow/orange colonies","Green metallic sheen colonies"],ans:1,exp:"Salmonella is a non-lactose fermenter (colorless on MacConkey), indole negative, and H2S positive — key differentiators from Shigella (which is H2S negative, non-motile)."},
+{cat:"Salmonella",q:"'Rose spots' in typhoid fever appear during which phase?",opts:["Phase 1 — initial presentation","Phase 2 — bacteremia","Phase 3 — second bacteremia","Convalescence"],ans:1,exp:"Rose spots (maculopapular lesions on the trunk) develop during Phase 2, when S. typhi spreads to liver, spleen, and bone marrow. Organisms can be cultured directly from rose spots."},
+{cat:"Salmonella",q:"Why are antibiotics NOT recommended in uncomplicated Salmonella gastroenteritis?",opts:["They are ineffective against gram-negatives","They don't shorten illness, prolong excretion, and can establish a gallbladder carrier state","They increase risk of HUS","They cause pseudomembranous colitis"],ans:1,exp:"Antibiotics don't lessen duration or severity of Salmonella gastroenteritis, can lead to resistance, significantly prolong excretion, and establish a carrier state in the gallbladder."},
+{cat:"Salmonella",q:"S. typhi in carriers localizes to which organ?",opts:["Liver","Spleen","Gallbladder","Peyer's patches"],ans:2,exp:"S. typhi localizes to the gallbladder in carriers who shed organisms for years while asymptomatic ('Typhoid Mary'). Cholecystectomy may be required to eliminate the carrier state."},
+{cat:"Salmonella",q:"Typhoid fever (enteric fever) is caused by which Salmonella serotype?",opts:["S. typhimurium","S. choleraesuis","S. typhi","S. enteritidis"],ans:2,exp:"Typhoid fever is caused by S. typhi. It is NOT a zoonotic infection — always acquired from a human source. S. choleraesuis is most common in Salmonella septicemia."},
+{cat:"C. difficile",q:"Pseudomembranous colitis is most classically associated with which antibiotic?",opts:["Penicillin","Gentamicin","Clindamycin","Tetracycline"],ans:2,exp:"Pseudomembranous colitis classically follows clindamycin or lincomycin treatment, beginning 4–8 days after initiation. Broad-spectrum antibiotics disrupt normal flora allowing C. difficile proliferation."},
+{cat:"C. difficile",q:"A hallmark sign of C. difficile pseudomembranous colitis is:",opts:["Rice-water stools","Green, foul-smelling diarrhea","Bloody mucoid stools with tenesmus","Constipation with rose spots"],ans:1,exp:"C. difficile presents with profuse, watery or mucoid green, foul-smelling diarrhea — green diarrhea is the key sign. High fever, leukocytosis, and severe abdominal pain may also occur."},
+{cat:"C. difficile",q:"First-line treatment of C. difficile is:",opts:["Stop offending antibiotic + vancomycin or fidaxomicin","Continue antibiotics and add metronidazole","Ampicillin monotherapy","Supportive care only"],ans:0,exp:"Treatment: stop the offending broad-spectrum antibiotic (allows normal flora to regrow) AND treat C. difficile with vancomycin or fidaxomicin."},
+{cat:"C. difficile",q:"C. difficile Toxin A causes hypersecretion by:",opts:["ADP-ribosylating adenylate cyclase","Elevating intracellular Ca2+ causing fluid accumulation","Nicking the 60S ribosome","Forming membrane pores"],ans:1,exp:"Toxin A (Entero A) causes hypersecretion by elevating intracellular Ca2+ levels, leading to fluid accumulation in the bowel. Toxin B is a cytopathic toxin."},
+{cat:"Listeria",q:"Listeria monocytogenes can grow at 4°C. Which outbreak demonstrates this?",opts:["Haiti cholera from contaminated water","Canadian coleslaw stored in a cold shed — 41 sick including 34 pregnant women","Texas outbreak from undercooked pork","Oregon shigellosis at a daycare"],ans:1,exp:"Manure from infected sheep contaminated cabbage stored cold — L. monocytogenes grew at 4°C throughout preparation, causing disease in 41 people (34 pregnant women, 9 stillbirths)."},
+{cat:"Listeria",q:"Which populations are most susceptible to serious Listeria infection?",opts:["Young healthy adults","Elderly, neonates, pregnant women, and immunocompromised individuals","School-age children","Athletes"],ans:1,exp:"Listeria is opportunistic. Pregnant women are 10× more likely to be infected (Hispanic pregnant women 24×). Patients over 60 = 58% of cases; 22% are infants under 1 month."},
+{cat:"Listeria",q:"The key virulence factor of Listeria monocytogenes is:",opts:["Shiga toxin","Listeriolysin O, which lyses the phagocytic vacuole","Cholera-like enterotoxin raising cAMP","Urease for stomach survival"],ans:1,exp:"Listeriolysin O (LLO) lyses the phagocytic vacuole, releasing bacteria into the cytoplasm. Bacteria then use actin polymerization ('jet trails') to spread cell-to-cell, evading extracellular immune defenses."},
+{cat:"Listeria",q:"Which antibiotic class does NOT work against Listeria monocytogenes?",opts:["Ampicillin","TMP/SMX","Cephalosporins","Erythromycin"],ans:2,exp:"Cephalosporins DO NOT work against L. monocytogenes. Treatment of choice is ampicillin or TMP/SMX. In untreated neonates, fatality rate is 100%."},
+{cat:"Listeria",q:"Listeria monocytogenes is the 3rd leading cause of death from:",opts:["Viral gastroenteritis","Food poisoning","Nosocomial infection","Waterborne illness"],ans:1,exp:"L. monocytogenes is the 3rd leading cause of death from food poisoning in the USA (~1,600 cases/year, ~260 deaths). Processed foods, unpasteurized milk, and poultry are major sources."},
+{cat:"S. aureus",q:"S. aureus food poisoning presents how soon after ingestion?",opts:["30 min – 1 hour","2–6 hours","12–24 hours","2–3 days"],ans:1,exp:"S. aureus gastroenteritis presents 2–6 hours after ingesting preformed toxin. Symptoms: nausea, abdominal pain, vomiting, then diarrhea — all over by ~12 hours."},
+{cat:"S. aureus",q:"S. aureus enterotoxins are notably:",opts:["Heat-labile — destroyed by cooking","Heat-stable — survive 100°C for over 30 minutes","Destroyed by stomach acid","Activated only by intestinal bile salts"],ans:1,exp:"S. aureus enterotoxins are heat-stable, withstanding 100°C for over 30 minutes and resisting proteolytic digestion. Toxin preformed in food survives cooking entirely."},
+{cat:"B. cereus",q:"The short-duration emetic form of B. cereus presents within:",opts:["10–18 hours","1–5 hours","24–48 hours","6–12 hours"],ans:1,exp:"The emetic (short-duration) form presents 1–5 hours after eating contaminated food (classically fried rice) and lasts 1–6 hours. This is an intoxication — a heat-stable toxin is consumed."},
+{cat:"B. cereus",q:"B. cereus emetic form is classically associated with:",opts:["Undercooked chicken","Fried rice","Raw shellfish","Unpasteurized milk"],ans:1,exp:"Fried rice is the classic vehicle. Spores survive heating, germinate when rice sits at room temperature, and release a heat-stable toxin. Reheating kills vegetative cells but not the toxin."},
+{cat:"B. cereus",q:"The long-duration diarrheal form of B. cereus presents within:",opts:["1–5 hours","10–18 hours","24–48 hours","3–5 days"],ans:1,exp:"The diarrheal form presents 10–18 hours after eating contaminated food (dairy, fried rice, etc.) with severe cramping and diarrhea. This is an infection, not an intoxication."},
+{cat:"Yersinia",q:"Yersinosis in teenagers and adults most commonly presents as:",opts:["Watery diarrhea and dehydration","'Pseudoappendicitis' with right lower quadrant pain","Bloody dysentery","Profuse rice-water stools"],ans:1,exp:"'Pseudoappendicitis' is most common in older children and adults — right lower quadrant pain, anorexia, and tenderness over McBurney's point. Swollen mesenteric lymph nodes have led to unnecessary laparotomies."},
+{cat:"Yersinia",q:"The major source of Yersinia enterocolitica infection is:",opts:["Contaminated water only","Undercooked pork and unpasteurized milk","Raw shellfish","Contaminated poultry"],ans:1,exp:"Undercooked pork is the major source of Yersinia infection, along with unpasteurized milk and untreated water. Most human cases are reported from Europe."},
+{cat:"General",q:"A traveler returning from Mexico has watery non-bloody diarrhea. Most likely organism?",opts:["EHEC O157:H7","ETEC","Shigella dysenteriae","Campylobacter jejuni"],ans:1,exp:"ETEC (traveler's diarrhea / 'Montezuma's revenge') uses LT toxin (like cholera toxin) to raise cAMP, causing watery non-bloody diarrhea. Common in developing countries with poor water sanitation."},
+{cat:"General",q:"Bloody diarrhea with PMNs (dysentery) is characteristic of:",opts:["Norovirus and Rotavirus","ETEC and Vibrio cholerae","Shigella, Campylobacter, and EIEC","B. cereus and S. aureus"],ans:2,exp:"Invasive organisms (Shigella, EIEC, Campylobacter) cause bloody diarrhea with PMNs. EHEC also causes bloody diarrhea but is non-invasive (the exception). Watery diarrhea = non-invasive (ETEC, Vibrio, viral)."},
+{cat:"General",q:"A child under 5 has severe watery diarrhea and vomiting in winter. Most likely organism?",opts:["Norovirus","Rotavirus","Campylobacter jejuni","Shigella sonnei"],ans:1,exp:"Rotavirus is the leading cause of severe diarrhea requiring hospitalization in children under 5, peaking in winter months in temperate climates. Norovirus is more common in older children and adults."},
+{cat:"General",q:"Which GI pathogen requires the LARGEST infectious dose?",opts:["Shigella dysenteriae (~10 organisms)","EHEC O157:H7 (~100 organisms)","Vibrio cholerae (>10^8 organisms)","Campylobacter jejuni (~500 organisms)"],ans:2,exp:"V. cholerae requires >10^8 bacteria — the largest inoculum of any GI pathogen — because it is rapidly killed by gastric acid. S. dysenteriae needs only ~10 organisms (the smallest dose)."},
+{cat:"General",q:"C. difficile proliferates after:",opts:["Eating contaminated poultry","Broad-spectrum antibiotics disrupt normal GI flora","Foreign travel to developing countries","Drinking unpasteurized milk"],ans:1,exp:"Broad-spectrum antibiotics disrupt normal GI flora, allowing C. difficile to proliferate. Normal flora antagonism (bacterial interference) normally prevents C. difficile overgrowth. Clindamycin is the classic culprit."},
+{cat:"General",q:"A patient has explosive vomiting 3 hours after eating a salad at a potluck. Most likely cause?",opts:["Rotavirus","Norovirus","S. aureus enterotoxin","Salmonella gastroenteritis"],ans:2,exp:"S. aureus food poisoning presents 2–6 hours after ingestion of preformed toxin. Explosive vomiting is characteristic — the toxin stimulates local neural receptors affecting the vomiting center of the brain."},
+{cat:"General",q:"Which antibiotic is used for H. pylori but is generally NOT effective for Campylobacter?",opts:["Macrolides (clarithromycin)","Beta-lactams (amoxicillin)","Fluoroquinolones","TMP/SMX"],ans:1,exp:"H. pylori treatment includes amoxicillin (beta-lactam) + clarithromycin + PPI. Campylobacter is generally resistant to beta-lactams and TMP/SMX; macrolides or fluoroquinolones are used for prolonged cases."}
+];
+
+let quiz=[],idx=0,correct=0,answered=0;
+function shuffle(a){return a.sort(()=>Math.random()-0.5)}
+
+function start(){
+  quiz=shuffle([...POOL]).slice(0,20);
+  idx=0;correct=0;answered=0;
+  document.getElementById('result').style.display='none';
+  document.getElementById('qbody').style.display='block';
+  render();
+}
+
+function render(){
+  const q=quiz[idx];
+  document.getElementById('ctr').textContent='Q '+(idx+1)+' of 20';
+  document.getElementById('prog').style.width=((idx+1)/20*100)+'%';
+  document.getElementById('cat').textContent=q.cat;
+  document.getElementById('qtxt').textContent=q.q;
+  document.getElementById('exp').className='exp';
+  document.getElementById('exp').textContent=q.exp;
+  document.getElementById('nxt').style.display='none';
+  document.getElementById('sv').textContent=correct;
+  document.getElementById('st').textContent=answered;
+  const c=document.getElementById('opts');
+  c.innerHTML='';
+  shuffle(q.opts.map((o,i)=>({o,i}))).forEach(({o,i})=>{
+    const b=document.createElement('button');
+    b.className='opt';b.textContent=o;
+    b.onclick=()=>pick(b,i===q.ans,q.opts[q.ans]);
+    c.appendChild(b);
+  });
+}
+
+function pick(btn,isCorrect,correctText){
+  document.querySelectorAll('.opt').forEach(b=>{
+    b.classList.add('locked');b.onclick=null;
+    if(b.textContent===correctText) b.classList.add('reveal');
+  });
+  if(isCorrect){btn.className='opt locked correct';correct++;}
+  else{btn.className='opt locked wrong';}
+  answered++;
+  document.getElementById('sv').textContent=correct;
+  document.getElementById('st').textContent=answered;
+  document.getElementById('exp').className='exp show';
+  document.getElementById('nxt').style.display='inline-block';
+  document.getElementById('nxt').textContent=idx<19?'Next question':'See results';
+}
+
+function next(){
+  idx++;
+  if(idx>=20){showResult();}else{render();}
+}
+
+function showResult(){
+  document.getElementById('qbody').style.display='none';
+  document.getElementById('result').style.display='block';
+  document.getElementById('prog').style.width='100%';
+  const pct=Math.round(correct/20*100);
+  document.getElementById('fs').textContent=correct+'/20';
+  const labels=['Keep studying — review the explanations','Good start — focus on the missed topics','Solid performance!','Great job!','Excellent — you know your GI bugs!'];
+  document.getElementById('fl').textContent=pct<40?labels[0]:pct<60?labels[1]:pct<75?labels[2]:pct<90?labels[3]:labels[4];
+}
+
+start();
+</script>
+</body>
+</html>
